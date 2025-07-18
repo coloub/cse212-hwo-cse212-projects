@@ -22,7 +22,34 @@ public static class SetsAndMaps
     public static string[] FindPairs(string[] words)
     {
         // TODO Problem 1 - ADD YOUR CODE HERE
-        return [];
+        
+        // Use HashSet for O(1) lookup performance - this ensures O(n) overall complexity
+        var wordSet = new HashSet<string>(words);
+        var result = new List<string>();
+        var processedWords = new HashSet<string>(); // Track processed words to avoid duplicates
+        
+        foreach (var word in words)
+        {
+            // Skip if we've already processed this word
+            if (processedWords.Contains(word))
+                continue;
+                
+            // Create the reverse of the current word
+            var reversed = new string(word.Reverse().ToArray());
+            
+            // Check if reversed word exists in our set and it's not the same word (like "aa")
+            if (wordSet.Contains(reversed) && word != reversed)
+            {
+                // Add both words to processed set to avoid duplicate pairs
+                processedWords.Add(word);
+                processedWords.Add(reversed);
+                
+                // Format the pair according to test expectations
+                result.Add($"{word} & {reversed}");
+            }
+        }
+        
+        return result.ToArray();
     }
 
     /// <summary>
@@ -35,7 +62,7 @@ public static class SetsAndMaps
     /// file.
     /// </summary>
     /// <param name="filename">The name of the file to read</param>
-    /// <returns>fixed array of divisors</returns>
+    /// <returns>Dictionary mapping degree names to their counts</returns>
     public static Dictionary<string, int> SummarizeDegrees(string filename)
     {
         var degrees = new Dictionary<string, int>();
@@ -43,6 +70,22 @@ public static class SetsAndMaps
         {
             var fields = line.Split(",");
             // TODO Problem 2 - ADD YOUR CODE HERE
+            
+            // Ensure we have enough fields (at least 4 columns, index 3 for 4th column)
+            if (fields.Length >= 4)
+            {
+                var degree = fields[3].Trim(); // Get 4th column (index 3) and trim whitespace
+                
+                // Use TryGetValue for efficient dictionary access
+                if (degrees.TryGetValue(degree, out int currentCount))
+                {
+                    degrees[degree] = currentCount + 1;
+                }
+                else
+                {
+                    degrees[degree] = 1; // First occurrence of this degree
+                }
+            }
         }
 
         return degrees;
@@ -67,7 +110,53 @@ public static class SetsAndMaps
     public static bool IsAnagram(string word1, string word2)
     {
         // TODO Problem 3 - ADD YOUR CODE HERE
-        return false;
+        
+        // Normalize both words: remove spaces and convert to lowercase
+        var normalized1 = word1.Replace(" ", "").ToLowerInvariant();
+        var normalized2 = word2.Replace(" ", "").ToLowerInvariant();
+        
+        // Quick check: if lengths are different, they can't be anagrams
+        if (normalized1.Length != normalized2.Length)
+            return false;
+        
+        // Count character frequencies in the first word
+        var charCount = new Dictionary<char, int>();
+        
+        foreach (var c in normalized1)
+        {
+            if (charCount.TryGetValue(c, out int count))
+            {
+                charCount[c] = count + 1;
+            }
+            else
+            {
+                charCount[c] = 1;
+            }
+        }
+        
+        // Subtract character frequencies based on the second word
+        foreach (var c in normalized2)
+        {
+            if (charCount.TryGetValue(c, out int count))
+            {
+                if (count == 1)
+                {
+                    charCount.Remove(c); // Remove if count becomes 0
+                }
+                else
+                {
+                    charCount[c] = count - 1;
+                }
+            }
+            else
+            {
+                // Character in word2 not found in word1 - not an anagram
+                return false;
+            }
+        }
+        
+        // If all characters matched perfectly, the dictionary should be empty
+        return charCount.Count == 0;
     }
 
     /// <summary>
@@ -101,6 +190,23 @@ public static class SetsAndMaps
         // on those classes so that the call to Deserialize above works properly.
         // 2. Add code below to create a string out each place a earthquake has happened today and its magitude.
         // 3. Return an array of these string descriptions.
-        return [];
+        
+        var results = new List<string>();
+        
+        // Process each earthquake feature in the collection
+        if (featureCollection?.Features != null)
+        {
+            foreach (var feature in featureCollection.Features)
+            {
+                // Extract place and magnitude from the feature
+                var place = feature.Properties?.Place ?? "Unknown Location";
+                var magnitude = feature.Properties?.Mag ?? 0.0;
+                
+                // Format the string as expected by tests: "Place - Mag X.X"
+                results.Add($"{place} - Mag {magnitude:F1}");
+            }
+        }
+        
+        return results.ToArray();
     }
 }
